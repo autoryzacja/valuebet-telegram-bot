@@ -1,0 +1,63 @@
+>>> import requests
+... import time
+... import telegram
+... 
+... TELEGRAM_TOKEN = "7841171786:AAEfprB9dZreX9jMsyCN4_uFARvZFCHUtco"
+... CHAT_ID = "6292983516"
+... 
+... bot = telegram.Bot(token=TELEGRAM_TOKEN)
+... 
+... def get_pinnacle_odds():
+...     # Przykładowe dane; w przyszłości zastąp rzeczywistym pobieraniem kursów
+...     return {
+...         'match_id': '123',
+...         'home': 1.80,
+...         'draw': 3.30,
+...         'away': 4.20,
+...     }
+... 
+... def get_betclic_odds():
+...     # Przykładowe dane; w przyszłości zastąp rzeczywistym pobieraniem kursów
+...     return {
+...         'match_id': '123',
+...         'home': 2.00,
+...         'draw': 3.50,
+...         'away': 4.00,
+...     }
+... 
+... def calculate_value(pinnacle_odds, betclic_odds):
+...     value_alerts = []
+...     for outcome in ['home', 'draw', 'away']:
+...         p_ = 1 / pinnacle_odds[outcome]
+...         value = p_ * betclic_odds[outcome] - 1
+...         if value >= 0.05:
+...             value_alerts.append((outcome, value, pinnacle_odds[outcome], betclic_odds[outcome]))
+...     return value_alerts
+... 
+def send_telegram_message(msg):
+    bot.send_message(chat_id=CHAT_ID, text=msg)
+
+def main():
+    while True:
+        try:
+            pinnacle = get_pinnacle_odds()
+            betclic = get_betclic_odds()
+            alerts = calculate_value(pinnacle, betclic)
+            for outcome, value, p_odd, b_odd in alerts:
+                outcome_map = {'home': '1', 'draw': 'X', 'away': '2'}
+                msg = (
+                    f"⚽ ValueBet Alert!\n"
+                    f"Typ: {outcome_map[outcome]}\n"
+                    f"Kurs Pinnacle: {p_odd}\n"
+                    f"Kurs Betclic: {b_odd}\n"
+                    f"Value: +{round(value * 100, 2)}%\n"
+                    f"⏱️ Czas: {time.strftime('%H:%M:%S')}"
+                )
+                send_telegram_message(msg)
+            time.sleep(10)
+        except Exception as e:
+            print("Błąd:", e)
+            time.sleep(10)
+
+if __name__ == "__main__":
+    main()
